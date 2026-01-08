@@ -1,1 +1,99 @@
+import pandas as pd
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from scipy.spatial.distance import euclidean
 
+df = pd.read_csv("data_test_clustering_A1.csv")
+
+start, end = 20, 80
+segment = df.iloc[42482:43476]
+
+#if segment.shape[0] == 0:
+    #raise ValueError("Selected index range is outside the dataset")
+
+pca = PCA(n_components=2)
+pca_data = pca.fit_transform(segment)
+
+idx_242 = pca_data[11]
+idx_138 = pca_data[832]
+
+pca_242_pc1 = round(idx_242[0], 3)
+pca_138_pc2 = round(idx_138[1], 3)
+
+distance = round(euclidean(idx_242, idx_138), 3)
+
+kmeans = KMeans(n_clusters=4, random_state=0)
+labels = kmeans.fit_predict(segment)
+
+num_clusters = len(np.unique(labels))
+
+label_242 = int(labels[11])
+label_138 = int(labels[832])
+
+print("Distinct clusters:", num_clusters)
+print("Index 242 - most significant PCA value:", pca_242_pc1)
+print("Index 138 - second most significant PCA value:", pca_138_pc2)
+print("Euclidean distance:", distance)
+print("Cluster label for index 242:", label_242)
+print("Cluster label for index 138:", label_138)
+
+
+
+
+#####
+
+
+
+
+import pandas as pd
+
+# Load data
+df = pd.read_excel("test_data.xlsx")
+
+# Select required index range
+df_seg = df.iloc[125400:129400]
+
+# Clean NaNs EXACTLY as expected
+df_seg = df_seg.dropna()
+
+# Total price per item
+df_seg["TotalPrice"] = df_seg["Price"] * df_seg["Quantity"]
+
+# 1. Unique invoices
+unique_invoices = df_seg["Invoice"].nunique()
+
+# 2. Country with most orders
+orders_by_country = df_seg.groupby("Country")["Invoice"].nunique()
+country_most = orders_by_country.idxmax()
+country_most_count = orders_by_country.max()
+
+# 3. Country with least orders
+country_least = orders_by_country.idxmin()
+country_least_count = orders_by_country.min()
+
+# 4. Highest total price per order
+order_totals = df_seg.groupby("Invoice")["TotalPrice"].sum()
+highest_price = order_totals.max()
+highest_order_id = order_totals.idxmax()
+
+# 5. Second highest spending customer
+customer_totals = (
+    df_seg.groupby("Customer ID")["TotalPrice"]
+    .sum()
+    .sort_values(ascending=False)
+)
+
+second_customer_id = int(customer_totals.index[1])
+second_customer_orders = (
+    df_seg[df_seg["Customer ID"] == second_customer_id]["Invoice"]
+    .nunique()
+)
+
+# Print results
+print("Unique invoices:", unique_invoices)
+print("Country with most orders:", country_most, country_most_count)
+print("Country with least orders:", country_least, country_least_count)
+print("Highest total price:", highest_price, "Order ID:", highest_order_id)
+print("Second highest customer ID:", second_customer_id)
+print("Orders by second customer:", second_customer_orders)
